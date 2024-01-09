@@ -1,14 +1,10 @@
 #!/usr/bin/env python
 # coding: utf-8
-import numpy as np
 import pandas as pd
-from glob import glob
 import spacy
-import string
 import warnings
 import fitz
 from concurrent import futures
-from time import time
 from collections import defaultdict
 warnings.filterwarnings('ignore')
 pdf_path = "2.pdf"
@@ -16,16 +12,10 @@ pdf_path = "2.pdf"
 model_ner = spacy.load('./output/model-best/')
 
 
-# def cleanText(txt):
-#     punctuation = "!#$%&\'()*+:;<=>?[\\]^`{|}~-"""
-#     tablePunctuation = str.maketrans('', '', punctuation)
-#     text = str(txt)
-#     removepunctuation = text.translate(tablePunctuation)
-#     return str(removepunctuation)
 def cleanText(txt):
     punctuation = "!#$%&\'()*+:;<=>?[\\]^`{|}~-"""
     removepunctuation = txt.translate(str.maketrans('', '', punctuation))
-    removeQuotes = removepunctuation.replace('"', '') 
+    removeQuotes = removepunctuation.replace('"', '')
     return removeQuotes
 # group the label
 
@@ -49,13 +39,18 @@ def parser(text, label):
         text = text
     elif label == 'NGUOIKY':
         text = text
-    elif label in ('CHUCOSO', 'DIACHIKD', 'NOIDUNGKD', 'NGAYBANHANH', 'NGAYHETHAN','TRICHYEU'):
+    elif label in ('CHUCOSO', 'NOIDUNGKD', 'NGAYBANHANH', 'NGAYHETHAN'):
+        text = text
+    elif label in ('TRICHYEU'):
+        text = text
+    elif label in ('DIACHIKD'):
         text = text
         # text = re.sub(r'[^A-Za-z0-9{}]','',text)
     elif label in ('TENCOSO'):
         text = text
         text.title()
     return text
+
 
 grp_gen = groupgen()
 
@@ -65,7 +60,7 @@ def process_page(page):
 
 
 def getPredictions(pdf_path):
-    with fitz.open(stream = pdf_path) as doc:
+    with fitz.open(stream=pdf_path) as doc:
         # with fitz.open(pdf_path) as doc:
         text = ""
         with futures.ThreadPoolExecutor() as executor:
@@ -129,16 +124,17 @@ def getPredictions(pdf_path):
         label_tag = label[2:]
         text = parser(token, label_tag)
         if bo_tag in ('B', 'I'):
+            if label_tag == 'DIACHIKD' and any(t in token for t in entitis['TRICHYEU']):
+                continue
             if previois != label_tag:
                 entitis[label_tag].append(text)
             else:
                 if bo_tag == "B":
                     entitis[label_tag].append(text)
                 else:
-                    entitis[label_tag].append(text)      
+                    entitis[label_tag].append(text)
         previois = label_tag
-    for key,value in entitis.items():
+    for key, value in entitis.items():
         join_string = ' '.join(value)
         entitis[key] = join_string
     return entitis
-

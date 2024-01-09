@@ -45,7 +45,7 @@ Dưới đây là một ví dụ README hướng dẫn chạy API này:
 
 5. Sau khi ấn Choose File, nhập file của bạn vào và ấn Execute thì lướt xuống dưới sẽ có kết quả ở đây
    
-![result](result.png)
+![result](kq.png)
 
 ## Sử dụng API
 
